@@ -21,7 +21,7 @@ type Struct struct {
 	value   reflect.Value
 	TagName string
 	TagOptsFieldOmitter TagOptsFieldOmitter
-	IncludeEmptyConversions bool
+	IncludeEmptyConversions bool // Determines if empty maps are okay to display in the conversion
 }
 
 // TagOptsFieldOmitter is used to omit a field based on struct tags. The function can use any logic to parse the
