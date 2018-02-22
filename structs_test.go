@@ -210,6 +210,66 @@ func TestMap_OmitEmpty(t *testing.T) {
 	}
 }
 
+func TestMap_TagOptsFieldOmitterFalse(t *testing.T) {
+	type A struct {
+		Name  string
+		Value string
+		Time  time.Time
+	}
+
+	a := A{}
+	s := New(a)
+	s.TagOptsFieldOmitter = func([]string) bool {return false}
+	m := s.Map()
+
+	fmt.Println(m)
+
+	_, ok := m["Name"]
+	if !ok {
+		t.Error("Map should contain the Name field because the omitter always returns false")
+	}
+
+	_, ok = m["Value"]
+	if !ok {
+		t.Error("Map should contain the Value field because the omitter always returns false")
+	}
+
+	_, ok = m["Time"].(time.Time)
+	if !ok {
+		t.Error("Map should contain the Time field because the omitter always returns false")
+	}
+}
+
+func TestMap_TagOptsFieldOmitterTrue(t *testing.T) {
+	type A struct {
+		Name  string
+		Value string
+		Time  time.Time
+	}
+
+	a := A{}
+	s := New(a)
+	s.TagOptsFieldOmitter = func([]string) bool {return true}
+	m := s.Map()
+
+	fmt.Println(m)
+
+	_, ok := m["Name"]
+	if ok {
+		t.Error("Map should contain the Name field because the omitter always returns true")
+	}
+
+	_, ok = m["Value"]
+	if ok {
+		t.Error("Map should contain the Value field because the omitter always returns true")
+	}
+
+	_, ok = m["Time"]
+	if ok {
+		t.Error("Map should contain the Time field because the omitter always returns true")
+	}
+}
+
 func TestMap_OmitNested(t *testing.T) {
 	type A struct {
 		Name  string
@@ -623,6 +683,25 @@ func TestMap_TimeField(t *testing.T) {
 	_, ok := m["CreatedAt"].(time.Time)
 	if !ok {
 		t.Error("Time field must be final")
+	}
+}
+
+func TestMap_TimeFieldIncludeEmptyConversions(t *testing.T) {
+	type A struct {
+		CreatedAt time.Time
+	}
+
+	a := &A{CreatedAt: time.Now().UTC()}
+	s := New(a)
+	s.IncludeEmptyConversions = true
+	m := s.Map()
+
+	ca, ok := m["CreatedAt"].(map[string]interface{})
+	if !ok {
+		t.Error("CreatedAt was not included")
+	}
+	if len(ca) != 0 {
+		t.Error("Conversion was not empty")
 	}
 }
 
