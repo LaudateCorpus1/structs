@@ -133,6 +133,37 @@ func ExampleMap_omitEmpty() {
 	// map[Location:Tokyo]
 }
 
+func ExampleMap_TagOptsFieldOmitter() {
+	// By default field with struct types of zero values are processed too. We
+	// can stop processing them via "omitempty" tag option.
+	type Server struct {
+		Name     string `structs:",whitelist"`
+		ID       int32  `structs:",whitelist"`
+		Location string
+	}
+
+	// Only add location
+	server := &Server{
+		Name: "First Last",
+		ID: 1,
+		Location: "Tokyo",
+	}
+
+	s := New(server)
+	s.TagOptsFieldOmitter = func(tags []string) bool {
+		if len(tags) > 0 && tags[0] == "whitelist" {
+			return false
+		}
+		return true
+	}
+	m := s.Map()
+
+	// map contains only the Location field
+	fmt.Printf("%v\n", m)
+	// Output:
+	// map[Name:First Last ID:1]
+}
+
 func ExampleValues() {
 	type Server struct {
 		Name    string
