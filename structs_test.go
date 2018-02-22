@@ -210,6 +210,36 @@ func TestMap_OmitEmpty(t *testing.T) {
 	}
 }
 
+func TestMap_TagOptsFieldOmitter(t *testing.T) {
+	type A struct {
+		Name  string
+		Value string `structs:",excludeme"`
+		Time  time.Time
+	}
+
+	a := A{}
+	s := New(a)
+	s.TagOptsFieldOmitter = func(tags []string) bool {
+		return len(tags) > 0 && tags[0] == "excludeme"
+		}
+	m := s.Map()
+
+	_, ok := m["Name"]
+	if !ok {
+		t.Error("Map should contain the Name field because it has no tag")
+	}
+
+	_, ok = m["Value"]
+	if ok {
+		t.Error("Map should contain the Value field because its tag is excludeme")
+	}
+
+	_, ok = m["Time"]
+	if !ok {
+		t.Error("Map should contain the Time field because it has no tag")
+	}
+}
+
 func TestMap_OmitNested(t *testing.T) {
 	type A struct {
 		Name  string
@@ -623,6 +653,25 @@ func TestMap_TimeField(t *testing.T) {
 	_, ok := m["CreatedAt"].(time.Time)
 	if !ok {
 		t.Error("Time field must be final")
+	}
+}
+
+func TestMap_TimeFieldIncludeEmptyConversions(t *testing.T) {
+	type A struct {
+		CreatedAt time.Time
+	}
+
+	a := &A{CreatedAt: time.Now().UTC()}
+	s := New(a)
+	s.IncludeEmptyConversions = true
+	m := s.Map()
+
+	ca, ok := m["CreatedAt"].(map[string]interface{})
+	if !ok {
+		t.Error("CreatedAt was not included")
+	}
+	if len(ca) != 0 {
+		t.Error("Conversion was not empty")
 	}
 }
 

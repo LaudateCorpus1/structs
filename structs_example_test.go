@@ -133,6 +133,34 @@ func ExampleMap_omitEmpty() {
 	// map[Location:Tokyo]
 }
 
+func ExampleMap_TagOptsFieldOmitter() {
+	// Only convert the fields with the whitelist struct tag
+	type Server struct {
+		Name     string
+		ID       int32 `structs:",whitelist"`
+		Location string
+	}
+
+	server := &Server{
+		Name: "First Last",
+		ID: 1,
+		Location: "Tokyo",
+	}
+
+	s := New(server)
+	s.TagOptsFieldOmitter = func(tags []string) bool {
+		if len(tags) > 0 && tags[0] == "whitelist" {
+			return false
+		}
+		return true
+	}
+	m := s.Map()
+
+	fmt.Printf("%v\n", m)
+	// Output:
+	// map[ID:1]
+}
+
 func ExampleValues() {
 	type Server struct {
 		Name    string

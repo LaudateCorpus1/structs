@@ -20,7 +20,13 @@ type Struct struct {
 	raw     interface{}
 	value   reflect.Value
 	TagName string
+	TagOptsFieldOmitter TagOptsFieldOmitter
+	IncludeEmptyConversions bool // Determines if empty maps are okay to display in the conversion
 }
+
+// TagOptsFieldOmitter is used to omit a field based on struct tags. The function can use any logic to parse the
+// tagOptions and return true if the field should be omitted.
+type TagOptsFieldOmitter func(tags []string) bool
 
 // New returns a new *Struct with the struct s. It panics if the s's kind is
 // not struct.
@@ -102,6 +108,10 @@ func (s *Struct) FillMap(out map[string]interface{}) {
 		tagName, tagOpts := parseTag(field.Tag.Get(s.TagName))
 		if tagName != "" {
 			name = tagName
+		}
+
+		if s.TagOptsFieldOmitter != nil && s.TagOptsFieldOmitter(tagOpts) {
+			continue
 		}
 
 		// if the value is a zero value and the field is marked as omitempty do
@@ -518,11 +528,13 @@ func (s *Struct) nested(val reflect.Value) interface{} {
 	case reflect.Struct:
 		n := New(val.Interface())
 		n.TagName = s.TagName
+		n.TagOptsFieldOmitter = s.TagOptsFieldOmitter
+		n.IncludeEmptyConversions = s.IncludeEmptyConversions
 		m := n.Map()
 
 		// do not add the converted value if there are no exported fields, ie:
 		// time.Time
-		if len(m) == 0 {
+		if len(m) == 0 && !s.IncludeEmptyConversions{
 			finalVal = val.Interface()
 		} else {
 			finalVal = m
