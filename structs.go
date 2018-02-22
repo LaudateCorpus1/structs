@@ -20,11 +20,13 @@ type Struct struct {
 	raw     interface{}
 	value   reflect.Value
 	TagName string
-	TagOptsFieldOmitter tagOptsFieldOmitter
+	TagOptsFieldOmitter TagOptsFieldOmitter
 	IncludeEmptyConversions bool
 }
 
-type tagOptsFieldOmitter func(tags []string) bool
+// TagOptsFieldOmitter is used to omit a field based on struct tags. The function can use any logic to parse the
+// tagOptions and return true if the field should be omitted.
+type TagOptsFieldOmitter func(tags []string) bool
 
 // New returns a new *Struct with the struct s. It panics if the s's kind is
 // not struct.
@@ -527,6 +529,7 @@ func (s *Struct) nested(val reflect.Value) interface{} {
 		n := New(val.Interface())
 		n.TagName = s.TagName
 		n.TagOptsFieldOmitter = s.TagOptsFieldOmitter
+		n.IncludeEmptyConversions = s.IncludeEmptyConversions
 		m := n.Map()
 
 		// do not add the converted value if there are no exported fields, ie:

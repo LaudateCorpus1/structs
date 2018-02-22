@@ -210,63 +210,33 @@ func TestMap_OmitEmpty(t *testing.T) {
 	}
 }
 
-func TestMap_TagOptsFieldOmitterFalse(t *testing.T) {
+func TestMap_TagOptsFieldOmitter(t *testing.T) {
 	type A struct {
 		Name  string
-		Value string
+		Value string `structs:",excludeme"`
 		Time  time.Time
 	}
 
 	a := A{}
 	s := New(a)
-	s.TagOptsFieldOmitter = func([]string) bool {return false}
+	s.TagOptsFieldOmitter = func(tags []string) bool {
+		return len(tags) > 0 && tags[0] == "excludeme"
+		}
 	m := s.Map()
-
-	fmt.Println(m)
 
 	_, ok := m["Name"]
 	if !ok {
-		t.Error("Map should contain the Name field because the omitter always returns false")
-	}
-
-	_, ok = m["Value"]
-	if !ok {
-		t.Error("Map should contain the Value field because the omitter always returns false")
-	}
-
-	_, ok = m["Time"].(time.Time)
-	if !ok {
-		t.Error("Map should contain the Time field because the omitter always returns false")
-	}
-}
-
-func TestMap_TagOptsFieldOmitterTrue(t *testing.T) {
-	type A struct {
-		Name  string
-		Value string
-		Time  time.Time
-	}
-
-	a := A{}
-	s := New(a)
-	s.TagOptsFieldOmitter = func([]string) bool {return true}
-	m := s.Map()
-
-	fmt.Println(m)
-
-	_, ok := m["Name"]
-	if ok {
-		t.Error("Map should contain the Name field because the omitter always returns true")
+		t.Error("Map should contain the Name field because it has no tag")
 	}
 
 	_, ok = m["Value"]
 	if ok {
-		t.Error("Map should contain the Value field because the omitter always returns true")
+		t.Error("Map should contain the Value field because its tag is excludeme")
 	}
 
 	_, ok = m["Time"]
-	if ok {
-		t.Error("Map should contain the Time field because the omitter always returns true")
+	if !ok {
+		t.Error("Map should contain the Time field because it has no tag")
 	}
 }
 
