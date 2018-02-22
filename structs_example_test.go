@@ -134,13 +134,13 @@ func ExampleMap_omitEmpty() {
 }
 
 func ExampleMap_TagOptsFieldOmitter() {
+	// Only convert the fields with the whitelist struct tag
 	type Server struct {
 		Name     string `structs:",whitelist"`
 		ID       int32  `structs:",whitelist"`
 		Location string
 	}
 
-	// Only add location
 	server := &Server{
 		Name: "First Last",
 		ID: 1,
